@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { tables, getTableById } = require('../utils/dataStore');
+const { tables, getTableById, persistStore } = require('../utils/dataStore');
 const { validateTableId } = require('../middleware/validate');
 
 router.get('/', (req, res) => {
@@ -24,6 +24,7 @@ router.post('/:id/seat', validateTableId, (req, res) => {
 
   try {
     table.seat(customerName.trim());
+    persistStore();
     res.json(table.toJSON());
   } catch (err) {
     res.status(409).json({ error: err.message });
@@ -36,6 +37,7 @@ router.post('/:id/request-bill', validateTableId, (req, res) => {
 
   try {
     table.requestBill();
+    persistStore();
     res.json(table.toJSON());
   } catch (err) {
     res.status(409).json({ error: err.message });
@@ -46,6 +48,7 @@ router.post('/:id/clear', validateTableId, (req, res) => {
   const table = getTableById(req.params.id);
   if (!table) return res.status(404).json({ error: 'Table not found' });
   table.clear();
+  persistStore();
   res.json(table.toJSON());
 });
 

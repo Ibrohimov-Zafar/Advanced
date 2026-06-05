@@ -43,6 +43,7 @@ export default function OrderModal({ table, staffId, onClose }) {
       await ordersApi.create({
         tableId: String(table.id),
         staffId: selStaff,
+        customerName: table.customerName,
         items:   cart.map(({ menuItemId, quantity }) => ({ menuItemId, quantity })),
       });
       toast.success('Buyurtma oshxonaga yuborildi!');

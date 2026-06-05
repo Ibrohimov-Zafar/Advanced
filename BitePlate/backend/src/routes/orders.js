@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Order } = require('../models/Order');
-const { orders, getTableById, getMenuItemById, getStaffById } = require('../utils/dataStore');
+const { orders, getTableById, getMenuItemById, getStaffById, persistStore } = require('../utils/dataStore');
 const { validateOrderBody } = require('../middleware/validate');
 
 router.get('/', (req, res) => {
@@ -19,11 +19,23 @@ router.get('/:id', (req, res) => {
 });
 
 router.post('/', validateOrderBody, (req, res) => {
-  const { tableId, staffId, items, notes } = req.body;
+  const { tableId, staffId, items, notes, customerName } = req.body;
 
   const table = getTableById(tableId);
   if (!table) return res.status(404).json({ error: 'Table not found' });
-  if (table.state !== 'occupied') return res.status(409).json({ error: 'Table must be occupied to place an order' });
+
+  if (table.state !== 'occupied') {
+    const name = typeof customerName === 'string' ? customerName.trim() : '';
+    if (name && (table.state === 'free' || table.state === 'reserved')) {
+      try {
+        table.seat(name);
+      } catch (err) {
+        return res.status(409).json({ error: err.message });
+      }
+    } else {
+      return res.status(409).json({ error: 'Table must be occupied to place an order' });
+    }
+  }
 
   const staff = getStaffById(staffId);
   if (!staff) return res.status(404).json({ error: 'Staff member not found' });
@@ -43,6 +55,7 @@ router.post('/', validateOrderBody, (req, res) => {
   order.confirm();
   table.currentOrder = order.id;
   orders.set(order.id, order);
+  persistStore();
 
   res.status(201).json(order.toJSON());
 });
