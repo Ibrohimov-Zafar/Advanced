@@ -1,3 +1,11 @@
 /.claude
 /.cursor
 /Unit27_BitePlate_Assignment_Brief.docx
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# OS
+.DS_Store
+**/.DS_Store
