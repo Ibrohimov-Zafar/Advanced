@@ -272,12 +272,12 @@ export const staffApi = {
 };
 
 export const ordersApi = {
-  getAll: (params = {}) => delay(() => {
+  getAll: (params = {}) => {
     let result = Object.values(loadState().orders).map(orderToJSON);
     if (params.tableId) result = result.filter((o) => String(o.tableId) === String(params.tableId));
     if (params.status) result = result.filter((o) => o.status === params.status);
-    return result;
-  }()),
+    return delay(result);
+  },
   create: (data) => delay(mutate((state) => {
     const { tableId, staffId, items, notes, customerName } = data;
     const table = getTable(state, tableId);
@@ -435,7 +435,7 @@ export const billsApi = {
 
 export const historyApi = {
   getAll: () => delay(loadState().history),
-  getSummary: () => delay(() => {
+  getSummary: () => {
     const records = loadState().history;
     const totalRevenue = records.reduce((sum, r) => sum + r.total, 0);
     const counts = {};
@@ -466,16 +466,16 @@ export const historyApi = {
       .slice(0, 3)
       .map(([hour, count]) => ({ hour: parseInt(hour, 10), count }));
 
-    return {
+    return delay({
       totalOrders: records.length,
       totalRevenue,
       averageOrderValue: records.length ? totalRevenue / records.length : 0,
       topItems,
       revenueByCategory: revenue,
       peakHours,
-    };
-  }()),
-  getTopItems: () => delay(() => {
+    });
+  },
+  getTopItems: () => {
     const records = loadState().history;
     const counts = {};
     records.forEach((record) => {
@@ -483,11 +483,12 @@ export const historyApi = {
         counts[item.name] = (counts[item.name] || 0) + item.quantity;
       });
     });
-    return Object.entries(counts)
+    const topItems = Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([name, count]) => ({ name, count }));
-  }()),
+    return delay(topItems);
+  },
 };
 
 export function resetLocalStore() {
